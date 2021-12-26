@@ -25,5 +25,5 @@ Open the terminal and run:
 ````
 screen [port] [baud]
 ````
-
+This allows you to open up multiple serial monitors at the same time (in different terminal windows ofc)
 The baud rate is set to 115200 for the project
