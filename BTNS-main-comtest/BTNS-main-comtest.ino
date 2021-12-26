@@ -49,6 +49,7 @@ void loop(){
   }
 }
 
+//callbacks are set in main class as master or slave instances were unable to compile
 void OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
   if(isSlave){
     slave->OnDataReceive(mac, incomingData, len);
@@ -57,6 +58,7 @@ void OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
   }
 }
 
+//callbacks are set in main class as master or slave instances were unable to compile
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
   if(isSlave){
     slave->OnDataSent(mac_addr, sendStatus);
