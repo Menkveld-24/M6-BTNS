@@ -4,19 +4,20 @@
 // Author Menke Veerman (m.l.veerman@student.utwente.nl)
 // 
 // This sketch determines whether the flashed esp is a master or a slave, 
-// This is selected by shorting D1 to ground on startup (short = master, nc = slave)
+// This is selected by shorting D2 to ground on startup (short = master, nc = slave)
+// This is the main file which creates a communicator. The communicator is a wrapper for the 
+// Master or Slaves to keep this file somewhat clean.
 // 
 
-#include "./Master.h"
-#include "./Slave.h"
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
 #include <espnow.h>
+#include "Communicator.h"
+
 
 #define MASTERORSLAVE_PIN 4 //short to gnd for master, nc is slave (D1)
 
-Master *master;
-Slave *slave;
-
-bool isSlave;
+Communicator *communication;
 
 void setup(){
   Serial.begin(115200);
@@ -29,40 +30,24 @@ void setup(){
 
   //check if master or slave
   pinMode(MASTERORSLAVE_PIN, INPUT_PULLUP); //D2
-  isSlave = digitalRead(MASTERORSLAVE_PIN);
-  if(isSlave){ //if high configure as slave else master
-    slave = new Slave();
-    esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);    
-  } else{
-    master = new Master();
-    esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
-  }
-   esp_now_register_recv_cb(OnDataReceive);
-   esp_now_register_send_cb(OnDataSent);
+  communication = new Communicator(digitalRead(MASTERORSLAVE_PIN));
+  esp_now_set_self_role(digitalRead(MASTERORSLAVE_PIN) ? ESP_NOW_ROLE_SLAVE : ESP_NOW_ROLE_CONTROLLER);  
+
+  //callbacks are set in main because I was unable to move them to the communicator class
+  esp_now_register_recv_cb(onDataReceive);
+  esp_now_register_send_cb(onDataSent);
 }
 
 void loop(){
-  if(isSlave){
-    slave->Loop();
-  } else{
-    master->Loop();
-  }
+  communication->Loop();
 }
 
 //callbacks are set in main class as master or slave instances were unable to compile
-void OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
-  if(isSlave){
-    slave->OnDataReceive(mac, incomingData, len);
-  } else{
-    master->OnDataReceive(mac, incomingData, len);
-  }
+void onDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
+  communication->OnDataReceive(mac, incomingData, len);
 }
 
 //callbacks are set in main class as master or slave instances were unable to compile
-void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
-  if(isSlave){
-    slave->OnDataSent(mac_addr, sendStatus);
-  } else{
-    master->OnDataSent(mac_addr, sendStatus);
-  }
+void onDataSent(uint8_t *mac_addr, uint8_t sendStatus){
+  communication->OnDataSent(mac_addr, sendStatus);
 }
