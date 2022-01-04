@@ -7,21 +7,41 @@
 // 
 
 #include <Arduino.h>
-#include "ESP8266Wifi.h"
+#include <ESP8266WiFi.h>
 #include <espnow.h>
 #include "Communicator.h"
 #include "Master.h"
 #include "Slave.h"
 
+#define MASTERORSLAVE_PIN 4 //short to gnd for master, nc is slave (D1)
+
+//communicator instance pointer for the callbacks
+Communicator* Communicator::_communicator = nullptr;
+
 //initialisation
-Communicator::Communicator(bool _isSlave){
-    isSlave = _isSlave;
+Communicator::Communicator(){
+    pinMode(MASTERORSLAVE_PIN, INPUT_PULLUP); //D2
+    Communicator::isSlave = digitalRead(MASTERORSLAVE_PIN);
 
     Serial.print("I am a ");
-    Serial.println(isSlave ? "Slave " : "Master ");
+    Serial.println(Communicator::isSlave ? "Slave " : "Master ");
     Serial.println();
 
-    if(isSlave){ //if high configure as slave else master
+    Communicator::_communicator = this;
+
+    // Init ESP-NOW
+    if (esp_now_init() != 0) {
+        Serial.println("Error initializing ESP-NOW");
+        return;
+    }
+
+    esp_now_set_self_role(digitalRead(MASTERORSLAVE_PIN) ? ESP_NOW_ROLE_SLAVE : ESP_NOW_ROLE_CONTROLLER);  
+
+    //set callbacks
+    esp_now_register_recv_cb(OnDataReceive);
+    esp_now_register_send_cb(OnDataSent);
+
+    if(Communicator::isSlave){ //if high configure as slave else master
         slave = new Slave();  
     } else{
         master = new Master();
@@ -31,7 +51,7 @@ Communicator::Communicator(bool _isSlave){
 
 //pass a loop function to the master or slave
 void Communicator::Loop(){
-    if(isSlave){
+    if(Communicator::isSlave){
         slave->Loop();
     } else{
         master->Loop();
@@ -40,25 +60,25 @@ void Communicator::Loop(){
 
 // pass the data callback to the master or slave
 void Communicator::OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
-    if(isSlave){
-        slave->OnDataReceive(mac, incomingData, len);
-        slave->handleReceivedData(mac);
+    if(Communicator::isSlave){
+        Communicator::_communicator->slave->OnDataReceive(mac, incomingData, len);
+        Communicator::_communicator->slave->handleReceivedData(mac);
     } else{
-        master->OnDataReceive(mac, incomingData, len);
-        master->handleReceivedData(mac);
+        Communicator::_communicator->master->OnDataReceive(mac, incomingData, len);
+        Communicator::_communicator->master->handleReceivedData(mac);
     }
 }
 
 // data sent callback to master or slave
 void Communicator::OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
-  if(isSlave){
-    slave->OnDataSent(mac_addr, sendStatus);
+  if(Communicator::isSlave){
+    Communicator::_communicator->slave->OnDataSent(mac_addr, sendStatus);
   } else{
-    master->OnDataSent(mac_addr, sendStatus);
+    Communicator::_communicator->master->OnDataSent(mac_addr, sendStatus);
   }
 }
 
 // can be accessed to check whether the device is set as a slave or a master
 bool Communicator::amISlave(){
-    return isSlave;
+    return Communicator::isSlave;
 }

@@ -55,7 +55,7 @@ void EspNowController::OnDataReceive(uint8_t * mac, uint8_t *incomingData, uint8
     Serial.println(Received_data.isMaster);
 
     Serial.print("Message: ");
-    Serial.println(String(Received_data.message));
+    Serial.write(Received_data.message, sizeof(Received_data.message));
     Serial.println();
 }
 

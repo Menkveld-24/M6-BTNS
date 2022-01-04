@@ -4,6 +4,7 @@
 //superclass
 #include <stdint.h>
 #include <Arduino.h>
+#include <string>
 
 class EspNowController{
   public:
@@ -18,7 +19,7 @@ class EspNowController{
       int peerId; // -1 = unset for slave
       bool lookingForMaster;   // used by slave
       bool isMaster;    // used by master
-      String message;
+      char message[80]; // char array to send a string along, limit 80 chars
     } message_structure;
     message_structure Received_data;
 
