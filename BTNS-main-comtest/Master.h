@@ -1,26 +1,17 @@
-class Master{
+#ifndef _MASTER_H_
+#define _MASTER_H_
+
+//childclass of espnowcontroller
+#include "EspNowController.h"
+
+class Master : public EspNowController{
   public:
-    Master();
     void Loop();
-    void OnDataReceive(uint8_t * mac, uint8_t *incomingData, uint8_t len);
-    void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus);
+    void broadCastToAllSlaves(EspNowController::message_structure message);
+    void handleReceivedData(uint8_t * mac);
+    void registerSlave(uint8_t *mac);
   
   private:
-    //transmission data type
-    typedef struct message_structure { 
-      int peerId; // -1 = unset
-      bool lookingForMaster;
-      bool isMaster;
-      String message;
-    } message_structure;
-    message_structure Received_data;
-
-    void registerSlave(uint8_t *mac);
-    void SendData(uint8_t *targetMac ,message_structure message);
-    void broadCastToAllSlaves(message_structure message);
-
-    String convertMACtoStr(uint8_t *mac);
-
     unsigned long previousMillis = 0;
 
     //used for memcmp
@@ -38,3 +29,5 @@ class Master{
       {0xAF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
     }; 
 };
+
+#endif
