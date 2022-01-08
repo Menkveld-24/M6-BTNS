@@ -33,6 +33,10 @@ void EspNowController::SendData(uint8_t *targetMac ,message_structure message){
   return;
 }
 
+void EspNowController::test2(){
+  Serial.println("test");
+}
+
 //data received callback
 void EspNowController::OnDataReceive(uint8_t * mac, uint8_t *incomingData, uint8_t len){
     memcpy(&Received_data, incomingData, sizeof(Received_data));

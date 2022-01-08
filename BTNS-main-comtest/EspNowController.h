@@ -12,6 +12,7 @@ class EspNowController{
     void Loop();
     void OnDataReceive(uint8_t * mac, uint8_t *incomingData, uint8_t len);
     void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus);
+    void test2();
     
     //used by children v
     //transmission data type

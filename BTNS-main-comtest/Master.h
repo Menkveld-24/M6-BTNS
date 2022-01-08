@@ -3,13 +3,20 @@
 
 //childclass of espnowcontroller
 #include "EspNowController.h"
+#include "GameHost.h"
+#include <vector>
+using namespace std;
 
-class Master : public EspNowController{
+class Master : public EspNowController, public Gamehost{
   public:
     void Loop();
     void broadCastToAllSlaves(EspNowController::message_structure message);
     void handleReceivedData(uint8_t * mac);
     void registerSlave(uint8_t *mac);
+    void test1();
+    
+    vector<int> connectedSlaveIDs;
+    bool attemtGameStart();
   
   private:
     unsigned long previousMillis = 0;

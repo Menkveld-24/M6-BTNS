@@ -10,12 +10,17 @@
 #include "./Master.h"
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <vector>
+
+using namespace std;
 
 #define STATUS_LED 2
+#define GAME_START_THRESHOLD 2
 
 
 //main loop function
 void Master::Loop(){
+  test();
   return;
 }
 
@@ -35,6 +40,10 @@ void Master::handleReceivedData(uint8_t * mac){
   // followup action on data received
   if(Received_data.lookingForMaster) this->registerSlave(mac);
   return;
+}
+
+void Master::test1(){
+  Serial.println("test");
 }
 
 //register slaves
@@ -64,4 +73,18 @@ void Master::registerSlave(uint8_t *mac){
   }
   Serial.println("No empty mac places...");
   return;
+}
+
+
+bool Master::attemtGameStart(){
+  Serial.println("Attempting to start a game, counting slaves..");
+  
+  for(int i = 0; i < sizeof(slaveMACS); i++){
+    if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
+      //found a connected client
+      connectedSlaveIDs.push_back(i);
+    }
+  }
+  
+  return connectedSlaveIDs.size() >= GAME_START_THRESHOLD;
 }
