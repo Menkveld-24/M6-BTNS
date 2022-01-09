@@ -11,6 +11,7 @@
 #include <ESP8266WiFi.h>
 #include "EspNowController.h"
 #include <espnow.h>
+#include <string>
 
 #define STATUS_LED 2
 
@@ -34,28 +35,33 @@ void EspNowController::SendData(uint8_t *targetMac ,message_structure message){
 }
 
 //data received callback
-void EspNowController::OnDataReceive(uint8_t * mac, uint8_t *incomingData, uint8_t len){
-    memcpy(&Received_data, incomingData, sizeof(Received_data));
+void EspNowController::OnDataReceive(uint8_t * mac, message_structure received_data, uint8_t len){
 
     Serial.print(isSlave ? "Slave " : "Master ");
     Serial.print("received mail from: ");
     Serial.println(this->convertMACtoStr(mac));
   
-    Serial.println("Received_data");
+    Serial.println("received_data");
     Serial.print("Bytes received: ");
     Serial.println(len);
 
     Serial.print("Id: ");
-    Serial.println(Received_data.peerId);
+    Serial.println(received_data.peerId);
 
     Serial.print("looking for master: ");
-    Serial.println(Received_data.lookingForMaster);
+    Serial.println(received_data.lookingForMaster);
 
     Serial.print("is master: ");
-    Serial.println(Received_data.isMaster);
+    Serial.println(received_data.isMaster);
+
+    Serial.print("button pressed: ");
+    Serial.println(received_data.isPressed);
+
+    Serial.print("Turn on in millis: ");
+    Serial.println(received_data.turnOnInMillis);
 
     Serial.print("Message: ");
-    Serial.write(Received_data.message, sizeof(Received_data.message));
+    Serial.write(received_data.message, sizeof(received_data.message));
     Serial.println();
 }
 
@@ -66,6 +72,20 @@ void EspNowController::OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
     Serial.println(sendStatus == 0 ? "Delivery success" : "Delivery fail");
     Serial.println();
     return;
+}
+
+EspNowController::message_structure EspNowController::formatMessage(int peerId, bool lookingForMaster, bool isMaster, bool isPressed, int turnOnInMillis, int timeTurnedOn, std::string message){
+    message_structure _message = {
+        peerId, 
+        lookingForMaster, 
+        isMaster,
+        isPressed,
+        turnOnInMillis,
+        timeTurnedOn, 
+        "dummy"
+      };
+      strncpy(_message.message, message.c_str(), sizeof(_message.message));
+      return _message;
 }
 
 //convert a mac address to a string
