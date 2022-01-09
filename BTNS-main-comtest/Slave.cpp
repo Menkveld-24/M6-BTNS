@@ -18,30 +18,54 @@ void Slave::Loop(){
   unsigned long currentMillis = millis();
   if(slaveId == -1 && currentMillis - previousMillis >= 2000){
     previousMillis = millis();
-    message_structure _message = {slaveId, true, false, "Looking for master"};
+    message_structure _message = formatMessage(
+      slaveId,
+      true,
+      false,
+      false,
+      -2,
+      0,
+      "Looking for master");
     uint8_t broadcastMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    this->SendData(broadcastMac, _message);
+    SendData(broadcastMac, _message);
+  }
+  Gameclient::Loop();
+  return;
+}
+
+//function called after data is received, received_data is the dat that is received
+void Slave::handleReceivedData(uint8_t * mac, EspNowController::message_structure received_data){
+  // followup action on data received
+  if(received_data.isMaster) registerMaster(mac, received_data);
+  if(gameIsRunning() && received_data.isMaster && received_data.turnOnInMillis >= -1 && !buttonIsTurnedOn()){
+    //master sends data, we need to turn on at some point
+    receiveGameData(received_data);
   }
   return;
 }
 
-//function called after data is received, Received_data is the dat that is received
-void Slave::handleReceivedData(uint8_t * mac){
-  // followup action on data received
-  if(Received_data.isMaster) this->registerMaster(mac);
-  return;
-}
-
 //register master
-void Slave::registerMaster(uint8_t *mac){
+void Slave::registerMaster(uint8_t *mac, EspNowController::message_structure received_data){
   memmove(masterMAC, mac, 6);
-  slaveId = Received_data.peerId;
+  slaveId = received_data.peerId;
   esp_now_add_peer(masterMAC, ESP_NOW_ROLE_CONTROLLER, 1, NULL, 0);
   Serial.print("Registered master mac at: ");
-  Serial.println(this->convertMACtoStr(masterMAC));
+  Serial.println(convertMACtoStr(masterMAC));
   Serial.println("Set slave id: " + String(slaveId));
   Serial.println();
 
   digitalWrite(STATUS_LED, LOW); //onboard led showing it has found a master
   return;
+}
+
+void Slave::sendButtonPressed(int timeTurnedOn){
+  message_structure _message = formatMessage(
+      slaveId,
+      true,
+      false,
+      true,
+      -2,
+      timeTurnedOn,
+      "Button was pressed!");
+      SendData(masterMAC, _message);
 }

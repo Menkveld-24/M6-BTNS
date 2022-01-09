@@ -52,20 +52,21 @@ Communicator::Communicator(){
 //pass a loop function to the master or slave
 void Communicator::Loop(){
     if(Communicator::isSlave){
-        slave->Loop();
+        slave->Slave::Loop();
     } else{
-        master->Loop();
+        master->Master::Loop();
     }
 }
 
 // pass the data callback to the master or slave
 void Communicator::OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
+    memcpy(&Communicator::_received_data, incomingData, sizeof(Communicator::_received_data));
     if(Communicator::isSlave){
-        Communicator::_communicator->slave->OnDataReceive(mac, incomingData, len);
-        Communicator::_communicator->slave->handleReceivedData(mac);
+        Communicator::_communicator->slave->OnDataReceive(mac, Communicator::_received_data, len);
+        Communicator::_communicator->slave->handleReceivedData(mac, Communicator::_received_data);
     } else{
-        Communicator::_communicator->master->OnDataReceive(mac, incomingData, len);
-        Communicator::_communicator->master->handleReceivedData(mac);
+        Communicator::_communicator->master->OnDataReceive(mac, Communicator::_received_data, len);
+        Communicator::_communicator->master->handleReceivedData(mac, Communicator::_received_data);
     }
 }
 
