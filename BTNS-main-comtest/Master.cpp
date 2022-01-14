@@ -3,43 +3,32 @@
 // Issa Margherita, David Huybens, Sietze Huisman, Sade Yokubova
 // Author Menke Veerman (m.l.veerman@student.utwente.nl)
 // 
-// Master class, created at startup when selected at boot
+// Master class, this is a subclass of the base class espnowcontroller
 // 
 
 #include <Arduino.h>
-#include "Master.h"
+#include "./Master.h"
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <vector>
+#include <string>
+
+using namespace std;
 
 #define STATUS_LED 2
+#define GAME_START_THRESHOLD 1
 
-//master setup
-Master::Master(){
-  Serial.print("ESP8266 Board Master MAC Address:  ");
-  Serial.println(WiFi.macAddress());
-  WiFi.mode(WIFI_STA);
-  pinMode(STATUS_LED, OUTPUT);
-  digitalWrite(STATUS_LED, HIGH); //low = on, high = off
-  return;
-}
 
 //main loop function
 void Master::Loop(){
-  return;
-}
-
-//transmit data to all connected slaves
-void Master::SendData(uint8_t *targetMac ,message_structure message){
-  digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
-  esp_now_send(targetMac, (uint8_t *) &message, sizeof(message));
-  digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
+  Gamehost::Loop();
   return;
 }
 
 //broadcast the same data to all macs
 void Master::broadCastToAllSlaves(message_structure message){
   Serial.println("Broadcasting data to all connected slaves!");
-  for(int i = 0; i < sizeof(slaveMACS); i++){
+  for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
     if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
       SendData(slaveMACS[i], message);
     }
@@ -47,52 +36,38 @@ void Master::broadCastToAllSlaves(message_structure message){
   return;
 }
 
-//data sent callback function
-void Master::OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
-  Serial.println("Last Packet Send Status: ");
-  Serial.println("Target: " + this->convertMACtoStr(mac_addr));
-  Serial.println(sendStatus == 0 ? "Delivery success" : "Delivery fail");
-  Serial.println();
-  return;
-}
+//function called after data is received, received_data is the dat that is received
+void Master::handleReceivedData(uint8_t * mac, message_structure received_data){
+  // followup action on data received
+  if(memcmp(placeholderMAC, mac, sizeof(placeholderMAC)) != 0){  //sender exists)
+    if(received_data.lookingForMaster) registerSlave(mac);
 
-//data received callback function
-void Master::OnDataReceive(uint8_t *mac, uint8_t *incomingData, uint8_t len){
-  
-  Serial.print("Master received mail from: ");
-  Serial.println(this->convertMACtoStr(mac));
-  
-  
-  Serial.println("Received_data");
-  memcpy(&Received_data, incomingData, sizeof(Received_data));
-  Serial.print("Bytes received: ");
-  Serial.println(len);
-  Serial.print("Id: ");
-  Serial.println(Received_data.peerId);
-  Serial.print("looking for master: ");
-  Serial.println(Received_data.lookingForMaster);
-  Serial.print("Message: ");
-  Serial.println(String(Received_data.message));
-  Serial.println();
-  
-  if(Received_data.lookingForMaster) this->registerSlave(mac);
+    if(gameIsRunning() && received_data.isPressed){
+      //found a connected client and game is running, button pressed
+      for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
+        if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
+          buttonPressed(i, received_data);
+        }
+      }
+    }
+  }
   return;
-}
-
-//convert a mac address to a string
-String Master::convertMACtoStr(uint8_t *mac){
-  char macStr[18];
-  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  return String(macStr);
 }
 
 //register slaves
 void Master::registerSlave(uint8_t *mac){
-  for(int i = 0; i < sizeof(slaveMACS); i++){
-    if( memcmp(mac, slaveMACS[i], sizeof(mac)) == 0 ){ //reconnect a slave
-      message_structure _message = {i, false, true, "Reconnect to a master"};
-      this->SendData(slaveMACS[i], _message);
+  for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
+    if( memcmp(mac, slaveMACS[i], sizeof(mac)) == 0 && !gameIsRunning()){ //reconnect a slave
+      message_structure _message = formatMessage(
+        i, 
+        false, 
+        true,
+        false,
+        -2,
+        0, 
+        "Reconnect to a master"
+      );
+      SendData(slaveMACS[i], _message);
       Serial.print("Reconnected slave mac at: ");
       Serial.println(this->convertMACtoStr(slaveMACS[i]));
       Serial.print("With id: ");
@@ -103,8 +78,16 @@ void Master::registerSlave(uint8_t *mac){
       digitalWrite(STATUS_LED, HIGH); //onboard led showing a client was registered
       memmove(slaveMACS[i], mac, 6);
       esp_now_add_peer(slaveMACS[i], ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
-      message_structure _message = {i, false, true, "Found a master"};
-      this->SendData(slaveMACS[i], _message);
+      message_structure _message = formatMessage(
+        i, 
+        false, 
+        true,
+        false,
+        -2,
+        0, 
+        "Found a master"
+      );
+      SendData(slaveMACS[i], _message);
       Serial.print("Registered slave mac at: ");
       Serial.println(this->convertMACtoStr(slaveMACS[i]));
       Serial.println("Set slave id: " + String(i));
@@ -114,4 +97,48 @@ void Master::registerSlave(uint8_t *mac){
   }
   Serial.println("No empty mac places...");
   return;
+}
+
+//send data from the gamehost to a client
+void Master::sendToClient(int id, int turnOnInMillis, string message){
+  message_structure _message = formatMessage(
+    id, 
+    false, 
+    true,
+    false,
+    turnOnInMillis,
+    0, 
+    message
+  );
+  Serial.print("Sending to: ");
+  Serial.print(id);
+  Serial.print(" : ");
+  Serial.println(convertMACtoStr(slaveMACS[id]));
+
+  Serial.println(message.c_str());
+
+  SendData(slaveMACS[id], _message);
+}
+
+// gamehost attempt to start the game
+bool Master::attemptGameStart(){
+  connectedSlaveIDs.clear();
+  Serial.println(connectedSlaveIDs.size());
+  Serial.println("Attempting to start a game, counting slaves..");
+  Serial.println(sizeof(slaveMACS)/sizeof(slaveMACS[0]));
+  
+  for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
+    Serial.print("Loop: ");
+    Serial.println(i);
+    Serial.println(convertMACtoStr(slaveMACS[i]));
+    if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
+      //found a connected client
+      Serial.println("This is a slave");
+      connectedSlaveIDs.push_back(i);
+    } else {
+      Serial.println("Not a slave");
+    }
+  }
+  Serial.println(connectedSlaveIDs.size());
+  return connectedSlaveIDs.size() >= GAME_START_THRESHOLD;
 }
