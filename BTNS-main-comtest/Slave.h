@@ -10,7 +10,7 @@ class Slave : public EspNowController, public Gameclient{
     void Loop();
     void registerMaster(uint8_t *mac, EspNowController::message_structure received_data);
     void handleReceivedData(uint8_t * mac, EspNowController::message_structure received_data);
-    void sendButtonPressed(int timeTurnedOn);
+    void sendButtonPressed(int timeTurnedOn, bool isBlue);
   
   private:
     unsigned long previousMillis = 0;

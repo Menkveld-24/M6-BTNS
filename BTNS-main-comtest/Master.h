@@ -15,8 +15,9 @@ class Master : public EspNowController, public Gamehost{
     void handleReceivedData(uint8_t * mac, EspNowController::message_structure message);
     void registerSlave(uint8_t *mac);
   
-    void sendToClient(int id, int turnOnInMillis, std::string message);
+    void sendToClient(int id, bool isBlue, std::string message);
     bool attemptGameStart();
+    void stopGameAtAllClients(bool blueWon);
 
   private:
     unsigned long previousMillis = 0;

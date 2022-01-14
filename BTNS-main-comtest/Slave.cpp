@@ -25,6 +25,8 @@ void Slave::Loop(){
       false,
       -2,
       0,
+      false,
+      false,
       "Looking for master");
     uint8_t broadcastMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     SendData(broadcastMac, _message);
@@ -35,9 +37,10 @@ void Slave::Loop(){
 
 //function called after data is received, received_data is the dat that is received
 void Slave::handleReceivedData(uint8_t * mac, EspNowController::message_structure received_data){
+  
   // followup action on data received
   if(received_data.isMaster) registerMaster(mac, received_data);
-  if(gameIsRunning() && received_data.isMaster && received_data.turnOnInMillis >= -1 && !buttonIsTurnedOn()){
+  if(gameIsRunning() && received_data.isMaster){
     //master sends data, we need to turn on at some point
     receiveGameData(received_data);
   }
@@ -58,7 +61,7 @@ void Slave::registerMaster(uint8_t *mac, EspNowController::message_structure rec
   return;
 }
 
-void Slave::sendButtonPressed(int timeTurnedOn){
+void Slave::sendButtonPressed(int timeTurnedOn, bool isBlue){
   message_structure _message = formatMessage(
       slaveId,
       true,
@@ -66,6 +69,8 @@ void Slave::sendButtonPressed(int timeTurnedOn){
       true,
       -2,
       timeTurnedOn,
+      isBlue,
+      false,
       "Button was pressed!");
       SendData(masterMAC, _message);
 }

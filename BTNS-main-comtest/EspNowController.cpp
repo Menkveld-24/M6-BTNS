@@ -60,6 +60,15 @@ void EspNowController::OnDataReceive(uint8_t * mac, message_structure received_d
     Serial.print("Turn on in millis: ");
     Serial.println(received_data.turnOnInMillis);
 
+    Serial.print("Time turned on: ");
+    Serial.println(received_data.timeTurnedOn);
+
+    Serial.print("Button is blue: ");
+    Serial.println(received_data.isBlue);
+
+    Serial.print("Is end: ");
+    Serial.println(received_data.isEndOfGame);
+
     Serial.print("Message: ");
     Serial.write(received_data.message, sizeof(received_data.message));
     Serial.println();
@@ -74,14 +83,15 @@ void EspNowController::OnDataSent(uint8_t *mac_addr, uint8_t sendStatus){
     return;
 }
 
-EspNowController::message_structure EspNowController::formatMessage(int peerId, bool lookingForMaster, bool isMaster, bool isPressed, int turnOnInMillis, int timeTurnedOn, std::string message){
+EspNowController::message_structure EspNowController::formatMessage(int peerId, bool lookingForMaster, bool isMaster, bool isPressed, int turnOnInMillis, int timeTurnedOn, bool isBlue, bool isEndOfGame, std::string message){
     message_structure _message = {
         peerId, 
         lookingForMaster, 
         isMaster,
         isPressed,
         turnOnInMillis,
-        timeTurnedOn, 
+        timeTurnedOn,
+        isBlue, 
         "dummy"
       };
       strncpy(_message.message, message.c_str(), sizeof(_message.message));

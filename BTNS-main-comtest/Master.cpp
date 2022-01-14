@@ -16,7 +16,7 @@
 using namespace std;
 
 #define STATUS_LED 2
-#define GAME_START_THRESHOLD 1
+#define GAME_START_THRESHOLD 4
 
 
 //main loop function
@@ -64,7 +64,9 @@ void Master::registerSlave(uint8_t *mac){
         true,
         false,
         -2,
-        0, 
+        0,
+        false,
+        false, 
         "Reconnect to a master"
       );
       SendData(slaveMACS[i], _message);
@@ -84,7 +86,9 @@ void Master::registerSlave(uint8_t *mac){
         true,
         false,
         -2,
-        0, 
+        0,
+        false,
+        false, 
         "Found a master"
       );
       SendData(slaveMACS[i], _message);
@@ -100,14 +104,16 @@ void Master::registerSlave(uint8_t *mac){
 }
 
 //send data from the gamehost to a client
-void Master::sendToClient(int id, int turnOnInMillis, string message){
+void Master::sendToClient(int id, bool isBlue, string message){
   message_structure _message = formatMessage(
     id, 
     false, 
     true,
     false,
-    turnOnInMillis,
-    0, 
+    -2,
+    0,
+    isBlue,
+    false, 
     message
   );
   Serial.print("Sending to: ");
@@ -140,5 +146,21 @@ bool Master::attemptGameStart(){
     }
   }
   Serial.println(connectedSlaveIDs.size());
-  return connectedSlaveIDs.size() >= GAME_START_THRESHOLD;
+  return connectedSlaveIDs.size() >= GAME_START_THRESHOLD && connectedSlaveIDs.size()%2 == 0;
+}
+
+void Master::stopGameAtAllClients(bool blueWon){
+  message_structure _message = formatMessage(
+    -2, 
+    false, 
+    true,
+    false,
+    -2,
+    0,
+    blueWon,
+    true, 
+    "End of game"
+  );
+  broadCastToAllSlaves(_message);
+  Serial.println("Notified all clients that the game has ended!");
 }

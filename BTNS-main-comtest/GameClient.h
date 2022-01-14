@@ -8,19 +8,16 @@ class Gameclient{
         void Loop();
         void receiveGameData(EspNowController::message_structure received_data);
         bool gameIsRunning();
-        bool buttonIsTurnedOn();
-        virtual void sendButtonPressed(int timeTurnedOn) = 0;
+        virtual void sendButtonPressed(int timeTurnedOn, bool isBlue) = 0;
 
     private:
-        void turnButtonOn();
-        void turnButtonOff();
+        void turnButtonBlue();
+        void turnButtonRed();
         void buttonPressed();
 
         bool gameRunning = false;
-        bool buttonIsOn = false;
         bool buttonIsPressed = false;
-        bool canSend = false;
-        unsigned long turnOnAtMillis = 0;
+        bool isBlue;
         unsigned long turnedOnAtMillis = 0;
 };
 

@@ -18,18 +18,17 @@ class Gamehost{
         bool gameIsRunning();
 
 
-        virtual void sendToClient(int id, int turnOnInMillis, std::string message) = 0;
+        virtual void sendToClient(int id, bool isBlue, std::string message) = 0;
         virtual bool attemptGameStart() = 0;
+        virtual void stopGameAtAllClients(bool blueWon) = 0;
 
     private:
-        void enableNewButton();
-        void printStatistics();
-        void gameWon();
-        void gameOver();
-        bool gameRunning = false;
-        vector<int> timeTakenForPress; 
-        vector<int> freeButtons; //buttons that can be set
-        int delayForNextButton = 0;
+        void enableNewButton(int client_id, bool isBlue);
+        // void printStatistics();
+        void redWon();
+        void blueWon();
+        bool gameRunning = false; 
+        vector<int> blueButtons; //buttons that can be set
         // uint8_t* (&slaveMACS)[6][10]);
 };
 

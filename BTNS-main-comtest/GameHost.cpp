@@ -19,13 +19,6 @@ void Gamehost::Loop(){
     if(!gameRunning && digitalRead(START_GAME) == LOW){
         startGame();
     }
-    else if(gameRunning && delayForNextButton != 0){
-        if(timeTakenForPress.size() >= 10){ //enough samples to start automating button presses
-            if(millis() > delayForNextButton){
-                enableNewButton();
-            }
-        }
-    }
 }
 
 void Gamehost::startGame(){
@@ -40,10 +33,9 @@ void Gamehost::startGame(){
     //random shuffle list of connected clients, first half starts at fire
     for(int i = 0; i < connectedSlaveIDs.size(); i++){
         if(i < connectedSlaveIDs.size()/2){//first half
-            sendToClient(i, 0, "Fire at startup");
+            enableNewButton(i, false);
         } else {
-            sendToClient(i, -1, "Water at startup");
-            freeButtons.push_back(i);
+            enableNewButton(i, true);
         }
     }
 }
@@ -51,60 +43,61 @@ void Gamehost::startGame(){
 void Gamehost::buttonPressed(int client_id, EspNowController::message_structure _received_data){
     Serial.print(client_id);
     Serial.println(" Pressed a button!");
-    timeTakenForPress.push_back(_received_data.timeTurnedOn);
-    freeButtons.push_back(client_id);
-    if(timeTakenForPress.size() < 10){ // not enough samples, intantly enable a new button
-        enableNewButton();
+    // timeTakenForPress.push_back(_received_data.timeTurnedOn);
+    Serial.print("Color is blue: ");
+    Serial.println(_received_data.isBlue);
+    if(_received_data.isBlue){
+        //red pressed the blue button so blue owns one button less
+        blueButtons.erase(remove(blueButtons.begin(), blueButtons.end(), client_id), blueButtons.end());
+    } else {
+        //button pressed was red, add to bluebuttons list
+        blueButtons.push_back(client_id);
     }
-    if(freeButtons.size() == connectedSlaveIDs.size()){ //all buttons water
-        gameWon();
+    //button toggles color itself
+    // enableNewButton(client_id, !_received_data.isBlue);
+
+    if(blueButtons.size() == connectedSlaveIDs.size()){ //all buttons water
+        blueWon();
+    } else if (blueButtons.size() == 0){
+        redWon();
     }
 }
 
-void Gamehost::enableNewButton(){
-    int nextDelay = 0;
-    if(timeTakenForPress.size() >= 10){
-        int totalTime = accumulate(timeTakenForPress.end() - 9,timeTakenForPress.end(), 0);
-        int averageTime = totalTime/timeTakenForPress.size();
-        nextDelay = int(averageTime * 0.9);
+void Gamehost::enableNewButton(int client_id, bool isBlue){
+    if(isBlue){
+        sendToClient(client_id, isBlue, "Firing up new blue button..");
+        blueButtons.push_back(client_id);
+    } else {
+        sendToClient(client_id, isBlue, "Firing up new red button..");
     }
-    random_shuffle(freeButtons.begin(), freeButtons.end());
-    sendToClient(freeButtons[0], nextDelay, "Firing up new button..");
-    freeButtons.erase(freeButtons.begin());
-
-    if(freeButtons.size() <= 0){ //all buttons fire
-        gameOver();
-    } else{
-        delayForNextButton = millis() + nextDelay;
-    }
-
 }
 
-void Gamehost::gameOver(){
+// void Gamehost::printStatistics(){
+//     // int totalTime = accumulate(timeTakenForPress.begin(),timeTakenForPress.end(), 0);
+//     // int averageTime = totalTime/timeTakenForPress.size();
+
+//     // Serial.println("Game statistics:"); 
+//     // Serial.print("Buttons pressed: ");
+//     // Serial.println(timeTakenForPress.size());
+
+//     // Serial.print("Total game time: ");
+//     // Serial.println(totalTime);
+
+//     // Serial.print("Average time between presses:");
+//     // Serial.println(averageTime);
+// }
+
+void Gamehost::redWon(){
     gameRunning = false;
-    Serial.println("You Lost the game :( Next time better luck");
-    printStatistics();
+    Serial.println("Red won the game!");
+    
+    // printStatistics();
 }
 
-void Gamehost::printStatistics(){
-    int totalTime = accumulate(timeTakenForPress.begin(),timeTakenForPress.end(), 0);
-    int averageTime = totalTime/timeTakenForPress.size();
-
-    Serial.println("Game statistics:"); 
-    Serial.print("Buttons pressed: ");
-    Serial.println(timeTakenForPress.size());
-
-    Serial.print("Total game time: ");
-    Serial.println(totalTime);
-
-    Serial.print("Average time between presses:");
-    Serial.println(averageTime);
-}
-
-void Gamehost::gameWon(){
+void Gamehost::blueWon(){
     gameRunning = false;
-    Serial.println("You won the game!");
-    printStatistics();
+    Serial.println("Blue won the game!");
+    // printStatistics();
 }
 
 bool Gamehost::gameIsRunning(){

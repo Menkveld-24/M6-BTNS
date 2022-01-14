@@ -21,10 +21,12 @@ class EspNowController{
       bool isPressed; // true if button is pressed
       int turnOnInMillis; //if = 0 turn on now, else wait the amount of time before turning on, -1 = start at water, -2 = ignore
       int timeTurnedOn; //time a button was turned on
+      bool isBlue; // color to turn on
+      bool isEndOfGame;
       char message[80]; // char array to send a string along, limit 80 chars
     } message_structure;
 
-    message_structure formatMessage(int peerId, bool lookingForMaster, bool isMaster, bool isPressed, int turnOnInMillis, int timeTurnedOn, std::string message);
+    message_structure formatMessage(int peerId, bool lookingForMaster, bool isMaster, bool isPressed, int turnOnInMillis, int timeTurnedOn, bool isBlue, bool isEndOfGame, std::string message);
 
     void OnDataReceive(uint8_t * mac, message_structure received_data, uint8_t len);
 
