@@ -39,17 +39,17 @@ void Master::broadCastToAllSlaves(message_structure message){
 //function called after data is received, received_data is the dat that is received
 void Master::handleReceivedData(uint8_t * mac, message_structure received_data){
   // followup action on data received
-  // if(memcmp(placeholderMAC, mac, sizeof(placeholderMAC)) != 0){  //sender exists)
+  if(memcmp(placeholderMAC, mac, sizeof(placeholderMAC)) != 0){  //sender exists)
     if(received_data.lookingForMaster) registerSlave(mac);
 
     if(gameIsRunning() && received_data.isPressed){
       //found a connected client and game is running, button pressed
-      // for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
-        // if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
-          buttonPressed(received_data.client_id, received_data);
-        // }
-      // }
-    // }
+      for(int i = 0; i < sizeof(slaveMACS)/sizeof(slaveMACS[0]); i++){
+        if( memcmp(placeholderMAC, slaveMACS[i], sizeof(placeholderMAC)) != 0 ){
+          buttonPressed(i, received_data);
+        }
+      }
+    }
   }
   return;
 }
