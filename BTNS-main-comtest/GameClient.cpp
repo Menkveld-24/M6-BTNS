@@ -3,21 +3,15 @@
 #include "./Master.h"
 #include "./EspNowController.h"
 
-#define BUTTON_PIN 5 //D1
-#define ledRed 14 
-#define ledGreen 12
-#define ledBlue 13
+#define BUTTON_PIN 12 //D6
 
 Gameclient::Gameclient(){
     Serial.println("Created a game client!");
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-    pinMode(ledRed, OUTPUT);
-    pinMode(ledGreen, OUTPUT);
-    pinMode(ledBlue, OUTPUT);
 }
 
 void Gameclient::Loop(){
-+    unsigned long currentMillis = millis();
+    unsigned long currentMillis = millis();
     if(turnOnAtMillis < currentMillis){
         turnButtonOn();
         turnOnAtMillis = 86400000; //set extremely high to one day to prevent rerunning this method
@@ -55,14 +49,14 @@ void Gameclient::receiveGameData(EspNowController::message_structure received_da
 
 void Gameclient::turnButtonOn(){
     Serial.println("Turning the button on!");
-    analogWrite(ledRed, 255);
     buttonIsOn = true;
+    //do sth fancy here
 }
 
 void Gameclient::turnButtonOff(){
     Serial.println("Turning the button off!");
-    analogWrite(ledBlue, 255);
     buttonIsOn = false;
+    //do sth fancy here
 }
 
 void Gameclient::buttonPressed(){

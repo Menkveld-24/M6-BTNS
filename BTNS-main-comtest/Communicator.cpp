@@ -13,7 +13,7 @@
 #include "Master.h"
 #include "Slave.h"
 
-#define MASTERORSLAVE_PIN 4 //short to gnd for master, nc is slave (D2)
+#define MASTERORSLAVE_PIN 4 //short to gnd for master, nc is slave (D1)
 
 //communicator instance pointer for the callbacks
 Communicator* Communicator::_communicator = nullptr;
