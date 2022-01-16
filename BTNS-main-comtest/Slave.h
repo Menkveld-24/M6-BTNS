@@ -16,7 +16,7 @@ class Slave : public EspNowController, public Gameclient{
     unsigned long previousMillis = 0;
     int slaveId = -1;
     // EspNowController::message_structure received_data;
-    
+    bool alreadyMaster = false;
     uint8_t masterMAC[6]; //{0xAF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 };
 

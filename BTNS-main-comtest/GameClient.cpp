@@ -17,7 +17,7 @@ Gameclient::Gameclient(){
 }
 
 void Gameclient::Loop(){
-+    unsigned long currentMillis = millis();
+    unsigned long currentMillis = millis();
     if(turnOnAtMillis < currentMillis){
         turnButtonOn();
         turnOnAtMillis = 86400000; //set extremely high to one day to prevent rerunning this method
