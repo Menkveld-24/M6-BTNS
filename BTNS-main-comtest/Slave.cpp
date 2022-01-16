@@ -37,7 +37,8 @@ void Slave::Loop(){
 void Slave::handleReceivedData(uint8_t * mac, EspNowController::message_structure received_data){
   // followup action on data received
   if(received_data.isMaster && !alreadyMaster) registerMaster(mac, received_data);
-  if(gameIsRunning() && received_data.isMaster && received_data.turnOnInMillis >= -1 && !buttonIsTurnedOn()){
+  // if(received_data.isMaster && received_data.turnOnInMillis >= -1 && !buttonIsTurnedOn()){
+    if(received_data.isMaster && received_data.turnOnInMillis >= -1 ){
     //master sends data, we need to turn on at some point
     receiveGameData(received_data);
   }

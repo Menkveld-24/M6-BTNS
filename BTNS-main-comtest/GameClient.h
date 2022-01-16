@@ -8,7 +8,7 @@ class Gameclient{
         void Loop();
         void receiveGameData(EspNowController::message_structure received_data);
         bool gameIsRunning();
-        bool buttonIsTurnedOn();
+        // bool buttonIsTurnedOn();
         virtual void sendButtonPressed(int timeTurnedOn) = 0;
 
     private:

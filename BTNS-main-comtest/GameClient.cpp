@@ -56,13 +56,13 @@ void Gameclient::receiveGameData(EspNowController::message_structure received_da
 void Gameclient::turnButtonOn(){
     Serial.println("Turning the button on!");
     analogWrite(ledRed, 255);
-    buttonIsOn = true;
+    // buttonIsOn = true;
 }
 
 void Gameclient::turnButtonOff(){
     Serial.println("Turning the button off!");
     analogWrite(ledBlue, 255);
-    buttonIsOn = false;
+    // buttonIsOn = false;
 }
 
 void Gameclient::buttonPressed(){
@@ -80,6 +80,6 @@ bool Gameclient::gameIsRunning(){
     return gameRunning;
 }
 
-bool Gameclient::buttonIsTurnedOn(){
-    return buttonIsOn;
-}
+// bool Gameclient::buttonIsTurnedOn(){
+//     return buttonIsOn;
+// }
