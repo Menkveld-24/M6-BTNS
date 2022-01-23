@@ -1,13 +1,32 @@
+#include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 #include "./GameClient.h"
 #include "./Master.h"
 #include "./EspNowController.h"
 
-#define BUTTON_PIN 12 //D6
+#define BUTTON_PIN 5 //D1
+
+#define ledRed 14 
+#define ledGreen 12
+#define ledBlue 13
+
+#define ledPin 12
+#define amount 1
+
+#define NeoLed false
+Adafruit_NeoPixel led(1, ledPin, NEO_GRB + NEO_KHZ400);
 
 Gameclient::Gameclient(){
     Serial.println("Created a game client!");
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    if(NeoLed){
+        led.begin();
+    }
+    else{
+        pinMode(ledRed, OUTPUT);
+        pinMode(ledGreen, OUTPUT);
+        pinMode(ledBlue, OUTPUT);
+      }
 }
 
 void Gameclient::Loop(){
@@ -47,12 +66,28 @@ void Gameclient::receiveGameData(EspNowController::message_structure received_da
 
 void Gameclient::turnButtonBlue(){
     Serial.println("Turning the button blue!");
-    //do sth fancy here
+    if(NeoLed){
+      led.setPixelColor(0, 0, 0, 255);
+      led.show();
+      }
+    else{
+      analogWrite(ledRed, 0);
+      analogWrite(ledBlue, 255);
+      analogWrite(ledGreen, 0);
+      }
 }
 
 void Gameclient::turnButtonRed(){
     Serial.println("Turning the button red!");
-    //do sth fancy here
+    if(NeoLed){
+      led.setPixelColor(0, 0, 255, 0);
+      led.show();
+      }
+    else{
+      analogWrite(ledRed, 255);
+      analogWrite(ledBlue, 0);
+      analogWrite(ledGreen, 0);
+      }
 }
 
 void Gameclient::buttonPressed(){

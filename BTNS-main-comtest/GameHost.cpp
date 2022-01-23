@@ -7,7 +7,7 @@
 
 using namespace std;
 
-#define START_GAME 14 //D5
+#define START_GAME 5 //D1
 
 Gamehost::Gamehost(){//uint8_t* (&_slaveMACS)[6][10]){
     Serial.println("Gamehost created");
