@@ -49,7 +49,7 @@ void Master::handleReceivedData(uint8_t * mac, message_structure received_data){
           buttonPressed(received_data.peerId, received_data);
         // }
       // }
-    }
+    //}
   }
   return;
 }
