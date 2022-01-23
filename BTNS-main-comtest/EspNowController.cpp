@@ -91,7 +91,8 @@ EspNowController::message_structure EspNowController::formatMessage(int peerId, 
         isPressed,
         turnOnInMillis,
         timeTurnedOn,
-        isBlue, 
+        isBlue,
+        isEndOfGame, 
         "dummy"
       };
       // strncpy(_message.message, message.c_str(), sizeof(_message.message));
