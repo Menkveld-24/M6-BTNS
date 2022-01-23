@@ -94,7 +94,7 @@ EspNowController::message_structure EspNowController::formatMessage(int peerId, 
         isBlue, 
         "dummy"
       };
-      strncpy(_message.message, message.c_str(), sizeof(_message.message));
+      // strncpy(_message.message, message.c_str(), sizeof(_message.message));
       return _message;
 }
 
