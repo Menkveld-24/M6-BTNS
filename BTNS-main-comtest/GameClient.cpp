@@ -12,16 +12,21 @@
 #define ledPin 12
 #define amount 1
 
-//Adafruit_NeoPixel led(1, 12, NEO_GRB + NEO_KHZ400);
+#define Neo false
+Adafruit_NeoPixel led(1, 12, NEO_GRB + NEO_KHZ400);
 
 
 Gameclient::Gameclient(){
     Serial.println("Created a game client!");
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-   pinMode(ledRed, OUTPUT);
-   pinMode(ledGreen, OUTPUT);
-   pinMode(ledBlue, OUTPUT);
-   // led.begin();
+    if(Neo){
+      led.begin();
+    }
+    else{
+      pinMode(ledRed, OUTPUT);
+      pinMode(ledGreen, OUTPUT);
+      pinMode(ledBlue, OUTPUT);
+    }   
 }
 
 void Gameclient::Loop(){
@@ -63,21 +68,29 @@ void Gameclient::receiveGameData(EspNowController::message_structure received_da
 
 void Gameclient::turnButtonOn(){
     Serial.println("Turning the button on!");
-    analogWrite(ledRed, 255);
-    analogWrite(ledBlue, 0);
-    analogWrite(ledGreen, 0);
-    //led.setPixelColor(0, 0, 255, 0);
-    //led.show();
+    if(Neo){
+      led.setPixelColor(0, 0, 255, 0);
+      led.show();
+    }
+    else{
+      analogWrite(ledRed, 255);
+      analogWrite(ledBlue, 0);
+      analogWrite(ledGreen, 0);
+    }
     // buttonIsOn = true;
 }
 
 void Gameclient::turnButtonOff(){
     Serial.println("Turning the button off!");
+    if(Neo){
+        led.setPixelColor(0, 0, 0, 255);
+        led.show();
+    }
+    else{
     analogWrite(ledBlue, 255);
     analogWrite(ledRed, 0);
     analogWrite(ledGreen, 0);
-     //led.setPixelColor(0, 0, 0, 255);
-     //led.show();
+    } 
     // buttonIsOn = false;
 }
 

@@ -52,13 +52,13 @@ void Gamehost::buttonPressed(int client_id, EspNowController::message_structure 
     Serial.print(client_id);
     Serial.println(" Pressed a button!");
     timeTakenForPress.push_back(_received_data.timeTurnedOn);
-    freeButtons.push_back(client_id);
     if(timeTakenForPress.size() < 10){ // not enough samples, intantly enable a new button
         enableNewButton();
     }
     if(freeButtons.size() == connectedSlaveIDs.size()){ //all buttons water
         gameWon();
     }
+    freeButtons.push_back(client_id);
 }
 
 void Gamehost::enableNewButton(){
